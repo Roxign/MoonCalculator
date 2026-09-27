@@ -707,6 +707,22 @@ function renderMoon(cv,ob,scene,opt){
       const d2=rr+(small?9:12)*S;
       ctx.fillText(lab,cx+ux*d2,cy+uy*d2);
     };
+    /* Z–N 夾角：這就是兩地月面看起來轉了多少 */
+    const pa=n180(ob.poleAng);
+    if(Math.abs(pa)>8){
+      const ar=rr+(small?4:5)*S;
+      ctx.strokeStyle='rgba(120,190,255,.45)'; ctx.lineWidth=1.6*S;
+      ctx.beginPath(); ctx.arc(cx,cy,ar,-90*D2R,(pa-90)*D2R,pa<0); ctx.stroke();
+      const am=pa/2*D2R, d3=ar-(small?10:13)*S;
+      const tx=cx+sin(am)*d3, ty=cy-cos(am)*d3;
+      ctx.font=fnt('600',(small?8.5:9.5)*S);
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      const txt=Math.abs(pa).toFixed(0)+'°';
+      const wd=ctx.measureText(txt).width;
+      ctx.fillStyle='rgba(5,8,16,.72)';
+      ctx.beginPath(); ctx.roundRect(tx-wd/2-3*S,ty-7*S,wd+6*S,14*S,4*S); ctx.fill();
+      ctx.fillStyle='rgba(150,200,255,.95)'; ctx.fillText(txt,tx,ty);
+    }
     tick(0,'rgba(152,172,208,.8)','Z',5);
     tick(ob.poleAng,'rgba(120,190,255,.92)','N',7);
     tick(ob.limbAng,'rgba(255,214,110,.95)','☉',7);

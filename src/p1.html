@@ -40,7 +40,6 @@ h1{font-size:clamp(13px,2vw,16px);margin:0;font-weight:650;letter-spacing:.2px;w
 .btn:hover{background:#1d2740;border-color:var(--line2)}
 .btn:active{transform:translateY(1px)}
 .btn.sm{padding:4px 8px;font-size:11px;border-radius:7px}
-.btn.xs{padding:3px 6px;font-size:10.5px;border-radius:6px}
 .btn.on{background:linear-gradient(180deg,#2a3f6b,#1d2c4e);border-color:#3f5c95;color:#dce7ff}
 .btn.tA.on{background:linear-gradient(180deg,#0f4b5a,#0b3743);border-color:#1d7f95;color:#b9f4ff}
 .btn.tB.on{background:linear-gradient(180deg,#5c4113,#3d2b0c);border-color:#96701f;color:#ffe2b3}
@@ -76,9 +75,6 @@ canvas{display:block;touch-action:none}
 
 /* ---------- time card ---------- */
 .trow{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:4px}
-.tlabel{font-size:10px;color:var(--acc);letter-spacing:.4px;font-weight:600;
-  display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap}
-.tlabel .hint{color:var(--dim2);font-weight:400;letter-spacing:0}
 .tgrid{flex:1 1 0;min-width:0;display:flex;flex-wrap:wrap;gap:4px}
 .tg3{flex:1 1 112px;min-width:0;display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:4px}
 .tg3+.tg3{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -107,6 +103,7 @@ canvas{display:block;touch-action:none}
 .qg1,.qg2{flex:1 1 100%}
 .qrow .btn{flex:1 1 auto;padding:3px 6px;font-size:10.5px;white-space:nowrap}
 .qg2 .btn{flex:1 1 0;min-width:0}
+.qg2 .btn.cyc{flex:0 0 auto;padding:3px 4px;font-size:12px;line-height:1.1;color:var(--acc)}
 #tSpeed,#tSpeedB{width:auto;flex:1 1 auto;min-width:0;font-size:11px;padding:4px 15px 4px 3px}
 /* 窄卡片（手機直式）：整列緊湊一點，避免倍速被擠到下一行 */
 @container (max-width:206px){
@@ -125,18 +122,9 @@ canvas{display:block;touch-action:none}
 
 /* ---------- unit (地點 + 月亮) ---------- */
 .unit{display:flex;flex-direction:column;padding:6px 7px 0;overflow:hidden;container-type:inline-size}
-.uhead{display:flex;align-items:center;gap:5px;min-width:0}
 .tag{font-size:10.5px;font-weight:700;width:18px;height:18px;border-radius:5px;display:grid;place-items:center;flex:0 0 18px}
 .tagA{background:var(--Ad);color:var(--A);box-shadow:inset 0 0 0 1px rgba(69,217,232,.45)}
 .tagB{background:var(--Bd);color:var(--B);box-shadow:inset 0 0 0 1px rgba(255,179,92,.45)}
-.uplace{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;flex:0 1 auto;min-width:1.6em}
-.ibtn{background:none;border:1px solid var(--line);color:var(--dim);border-radius:6px;
-  padding:1px 5px;font-size:11px;cursor:pointer;flex:0 0 auto;line-height:1.5}
-.ibtn.on{border-color:var(--acc);color:var(--acc)}
-.utime{font-size:9.5px;color:var(--dim2);font-variant-numeric:tabular-nums;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  margin-left:auto;flex:0 1 auto;min-width:0;padding-left:4px}
 .ugrow{flex:1 1 auto;min-height:6px}
 .uloc{display:flex;gap:4px;flex-wrap:wrap;align-items:center;row-gap:4px}
 .ug{display:flex;gap:4px;align-items:center;min-width:0}
@@ -147,9 +135,6 @@ canvas{display:block;touch-action:none}
 .uloc .gps{flex:0 0 auto;padding:4px 6px}
 .uloc input{padding:4px 3px;font-size:11px}
 .uloc .tag{margin-right:1px}
-.ucoord{display:flex;gap:4px;margin-top:4px}
-.ucoord input{flex:1 1 0}
-.ucoord .btn{flex:0 0 auto;padding:4px 7px}
 .swt{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--dim);cursor:pointer;user-select:none;white-space:nowrap}
 .swt input{width:auto;margin:0;accent-color:var(--acc);padding:0}
 .ucanvas{position:relative;container-type:inline-size;width:var(--moonw);max-width:100%;aspect-ratio:1/1;margin:0 auto;
@@ -192,7 +177,6 @@ canvas{display:block;touch-action:none}
 }
 .mzoom .zb.mtog{padding:1px 5px}
 .mzoom .zb.mtog.on{color:var(--acc);border-color:var(--acc)}
-@media (max-width:560px){ .tlabel .hint{display:none} }
 
 /* ---------- globe pane ---------- */
 #gpane{position:relative;overflow:hidden;border-radius:var(--r);border:1px solid var(--line);

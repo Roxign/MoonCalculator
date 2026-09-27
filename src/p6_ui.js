@@ -15,13 +15,11 @@ const root=document.documentElement;
 const I18N={zh:{
  title:'月相觀測模擬器', sub:'同一時刻、不同地點，月亮長得不一樣',
  scen:'情境', share:'連結', alt:'高度', az:'方位', illum:'照明', age:'月齡',
- timeTitle:'時間（觀測點 A 當地）', drivesGeom:'· 決定日–地–月幾何',
- aDrives:'上方時間即為此處的當地時間', sameInstant:'同 A',
- yy:'年',mm:'月',dd:'日',hh:'時',mi:'分',ss:'秒',tz:'時區', now:'現在',
+ sameInstant:'同 A',
+ yy:'年',mm:'月',dd:'日',hh:'時',mi:'分',ss:'秒',now:'現在',
  spin:'自轉', labels:'城市',
- subsolar:'日下點', sublunar:'月下點',
  tabSky:'天空', tabGeo:'幾何', tabTbl:'數據', tabNote:'說明',
- country:'國家 / 地區', customC:'—（自訂座標）', custom:'自訂位置',
+ customC:'—（自訂座標）', custom:'自訂位置',
  auto:'當地時區', autoLon:'依經度',
  sp1:'×1秒', sp60:'×1分', sp600:'×10分', sp3600:'×1時', sp21600:'×6時', sp86400:'×1日',
  copied:'連結已複製', copyFail:'無法複製，請手動複製網址', gpsFail:'無法取得定位',
@@ -55,6 +53,8 @@ const I18N={zh:{
  <li>地球左上的 <b>A</b>／<b>B</b> 一鍵兩用：把視角移到該點，同時決定之後點地球會設到哪一個觀測點。</li>
  <li>A 卡片的時間決定整個日–地–月幾何；B 預設與 A 同一時刻（欄位凍結），取消勾選後 B 可獨立調時間與播放。</li>
  <li>播放速度的 <b>×1時</b> 表示「實際每過 1 秒，模擬時間前進 1 小時」。月面右下的 <b>ⓘ</b> 可收放高度／方位等數值疊層。</li>
+ <li><b>月面外圈的藍弧與角度</b>：就是 <b>Z</b>（天頂）到 <b>N</b>（天北極）的夾角。兩張月面的這個角度差幾多少，看起來就轉了幾度。</li>
+ <li><b>≪ ≫</b>：跳到<b>上一次／下一次月相完全相同</b>的時刻——現在是滿月就跳到滿月。實際間隔因軌道橢圓而在 29.3～29.8 天之間變動，所以是解黃經距角相等的時刻，不是加一個固定天數。適合比較同月相在不同季節的高度與方位。</li>
  </ul>
  <b>精度與資料來源</b>
  <ul>
@@ -66,13 +66,11 @@ const I18N={zh:{
 },en:{
  title:'Moon View Simulator', sub:'Same moment, different places — the Moon looks different',
  scen:'Scenarios', share:'Link', alt:'Alt', az:'Az', illum:'Illum', age:'Age',
- timeTitle:'Time (local at observer A)', drivesGeom:'· drives Sun–Earth–Moon geometry',
- aDrives:'the time above is this observer’s local time', sameInstant:'Sync A',
- yy:'Y',mm:'Mo',dd:'D',hh:'h',mi:'m',ss:'s',tz:'Zone', now:'Now',
+ sameInstant:'Sync A',
+ yy:'Y',mm:'Mo',dd:'D',hh:'h',mi:'m',ss:'s',now:'Now',
  spin:'Spin', labels:'Cities',
- subsolar:'Subsolar', sublunar:'Sublunar',
  tabSky:'Sky', tabGeo:'Geometry', tabTbl:'Data', tabNote:'Notes',
- country:'Country / region', customC:'— (custom)', custom:'Custom location',
+ customC:'— (custom)', custom:'Custom location',
  auto:'Local', autoLon:'By lon.',
  sp1:'×1s', sp60:'×1m', sp600:'×10m', sp3600:'×1h', sp21600:'×6h', sp86400:'×1d',
  copied:'Link copied', copyFail:'Copy failed — copy the URL manually', gpsFail:'Location unavailable',
@@ -107,6 +105,8 @@ const I18N={zh:{
  <li>The <b>A</b>/<b>B</b> buttons at the top-left of the globe do two things at once: move the view to that observer, and choose which observer a tap on the globe will set.</li>
  <li>The time in card A drives the whole Sun–Earth–Moon geometry. B defaults to the same instant as A (its fields are frozen); uncheck to give B its own time and playback.</li>
  <li>A playback speed of <b>×1h</b> means “one real second advances the simulation by one hour”. The <b>ⓘ</b> button at the bottom-right of each Moon hides or shows the altitude/azimuth overlay.</li>
+ <li><b>The blue arc and angle around the Moon</b> is the <b>Z</b> (zenith) to <b>N</b> (celestial north) angle. How much that angle differs between the two views is exactly how much the Moon appears rotated.</li>
+ <li><b>≪ ≫</b> jump to the previous or next moment with the <b>exact same phase</b> — from a full moon you land on a full moon. The real interval swings between 29.3 and 29.8 days because the orbit is elliptical, so this solves for equal ecliptic elongation instead of adding a fixed number of days. Handy for comparing one phase across seasons.</li>
  </ul>
  <b>Accuracy & sources</b>
  <ul>
@@ -302,6 +302,12 @@ function updateText(){
 }
 /* 下一次黃經距角 = target（0＝朔、1 80＝望），以平均角速做不動點迭代 */
 const RATE=360/29.530588853;
+function samePhaseJD(jd0,dir){
+  const target=buildScene(jd0).elongEcl;
+  let j=jd0+dir*360/RATE;
+  for(let i=0;i<8;i++) j-=n180(n360(buildScene(j).elongEcl-target))/RATE;
+  return j;
+}
 function nextPhase(jd0,target){
   const f=j=>n360(buildScene(j).elongEcl-target);
   let j=jd0+(360-f(jd0))/RATE;
@@ -430,7 +436,8 @@ function syncForm(){
   if(ST.syncB&&ST.playB) setPlay('B',false);
   FLD.forEach(f=>{const e=$(f+'B'); if(e)e.disabled=ST.syncB;});
   ['tNowB','tPlayB','tSpeedB'].forEach(id=>{const e=$(id); if(e)e.disabled=ST.syncB;});
-  document.querySelectorAll('[data-unit="B"][data-step]').forEach(b=>{b.disabled=ST.syncB;});
+  document.querySelectorAll('[data-unit="B"][data-step],[data-unit="B"][data-cyc]')
+    .forEach(b=>{b.disabled=ST.syncB;});
 }
 function bindForm(){
   for(const t of ['A','B']){
@@ -473,6 +480,10 @@ function bindForm(){
     $('tSpeed'+sfx).addEventListener('change',e=>{ST[t==='A'?'speed':'speedB']=+e.target.value;});
     $('tPlay'+sfx).addEventListener('click',()=>setPlay(t,!(t==='A'?ST.play:ST.playB)));
   }
+  document.querySelectorAll('[data-cyc]').forEach(b=>b.addEventListener('click',()=>{
+    const t=b.dataset.unit||'A';
+    setFromJD(ST[t],samePhaseJD(jdOf(ST[t]),+b.dataset.cyc));
+    if(t==='A')applySync(); syncForm(); refresh();}));
   document.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>{
     const t=b.dataset.unit||'A';
     setFromJD(ST[t],jdOf(ST[t])+(+b.dataset.step)/86400);
@@ -608,6 +619,15 @@ function moonSetup(t){
 }
 /* ---------- 動畫 ---------- */
 let raf=null,lastT=0;
+/* 欄位只存到秒，所以播放時另外累加浮點 JD；
+   使用者自己改時間時差超過 1.5 秒，就重新以欄位為準。*/
+const ACC={A:null,B:null};
+function stepJD(t,d){
+  const cur=jdOf(ST[t]);
+  let a=ACC[t];
+  if(a===null||Math.abs(a-cur)>1.5/86400) a=cur;
+  a+=d; setFromJD(ST[t],a); ACC[t]=a;
+}
 function setStats(v){
   ST.stats=v;
   for(const t of ['A','B']){
@@ -618,7 +638,7 @@ function setStats(v){
 }
 function setPlay(t,v){
   const k=(t==='A'?'play':'playB'), b=$('tPlay'+(t==='A'?'':'B'));
-  ST[k]=v;
+  ST[k]=v; ACC[t]=null;
   if(b){ b.textContent=v?'❚❚':'▶'; b.classList.toggle('on',v); }
   if(v)startLoop();
   else if(!ST.play&&!ST.playB&&!ST.view.spin) refresh();   /* 暗停後補一次精繪 */
@@ -630,8 +650,8 @@ function loop(t){
   const dt=Math.min((t-lastT)/1000,0.2); lastT=t;
   if(ST.view.spin) ST.view.lon=n180(ST.view.lon+dt*7);
   let moved=false;
-  if(ST.play){ setFromJD(ST.A,jdOf(ST.A)+dt*ST.speed/86400); applySync(); moved=true; }
-  if(ST.playB&&!ST.syncB){ setFromJD(ST.B,jdOf(ST.B)+dt*ST.speedB/86400); moved=true; }
+  if(ST.play){ stepJD('A',dt*ST.speed/86400); applySync(); moved=true; }
+  if(ST.playB&&!ST.syncB){ stepJD('B',dt*ST.speedB/86400); moved=true; }
   if(moved){ syncForm(); refresh({q:'low',noHash:1}); }
   else drawGlobeOnly('low');
   raf=requestAnimationFrame(loop);
