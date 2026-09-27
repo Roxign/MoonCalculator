@@ -186,9 +186,10 @@ canvas{display:block;touch-action:none}
 #gpane{position:relative;overflow:hidden;border-radius:var(--r);border:1px solid var(--line);
   background:#03050b;box-shadow:var(--sh)}
 #globe{position:absolute;inset:0;width:100%;height:100%}
-.gov{position:absolute;display:flex;gap:4px;z-index:6}
-.gov.tr{top:7px;right:7px;flex-wrap:wrap;justify-content:flex-end;
-  max-width:calc(100% - 14px);align-items:center}
+/* 地球按鈕：3 欄 × 2 列，欄寬取兩列的最大值，所以兩列等寬 */
+.gov{position:absolute;z-index:6;display:grid;gap:4px;
+  grid-template-columns:repeat(3,minmax(0,auto));max-width:calc(100% - 14px)}
+.gov.tr{top:7px;right:7px}
 .gov .btn{background:rgba(13,19,32,.84);backdrop-filter:blur(7px)}
 
 /* ---------- tab bar + drawer ---------- */
