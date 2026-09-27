@@ -54,7 +54,6 @@ const I18N={zh:{
  <li>A 卡片的時間決定整個日–地–月幾何；B 預設與 A 同一時刻（欄位凍結），取消勾選後 B 可獨立調時間與播放。</li>
  <li>播放速度的 <b>×1時</b> 表示「實際每過 1 秒，模擬時間前進 1 小時」。月面右下的 <b>ⓘ</b> 可收放高度／方位等數值疊層。</li>
  <li><b>月面外圈的藍弧與角度</b>：就是 <b>Z</b>（天頂）到 <b>N</b>（天北極）的夾角。兩張月面的這個角度差幾多少，看起來就轉了幾度。</li>
- <li><b>≪ ≫</b>：跳到<b>上一次／下一次月相完全相同</b>的時刻——現在是滿月就跳到滿月。實際間隔因軌道橢圓而在 29.3～29.8 天之間變動，所以是解黃經距角相等的時刻，不是加一個固定天數。適合比較同月相在不同季節的高度與方位。</li>
  </ul>
  <b>精度與資料來源</b>
  <ul>
@@ -106,7 +105,6 @@ const I18N={zh:{
  <li>The time in card A drives the whole Sun–Earth–Moon geometry. B defaults to the same instant as A (its fields are frozen); uncheck to give B its own time and playback.</li>
  <li>A playback speed of <b>×1h</b> means “one real second advances the simulation by one hour”. The <b>ⓘ</b> button at the bottom-right of each Moon hides or shows the altitude/azimuth overlay.</li>
  <li><b>The blue arc and angle around the Moon</b> is the <b>Z</b> (zenith) to <b>N</b> (celestial north) angle. How much that angle differs between the two views is exactly how much the Moon appears rotated.</li>
- <li><b>≪ ≫</b> jump to the previous or next moment with the <b>exact same phase</b> — from a full moon you land on a full moon. The real interval swings between 29.3 and 29.8 days because the orbit is elliptical, so this solves for equal ecliptic elongation instead of adding a fixed number of days. Handy for comparing one phase across seasons.</li>
  </ul>
  <b>Accuracy & sources</b>
  <ul>
@@ -252,7 +250,7 @@ const dropAvoid=()=>{AVOID=null;};
 function overlayAvoid(){
   if(AVOID)return AVOID;
   const cv=$('globe'), r=cv.getBoundingClientRect(), s=cv.width/(r.width||1), out=[];
-  for(const sel of ['.gov.tl','.gov.tr','#tabbar']){
+  for(const sel of ['.gov.tr','#tabbar']){
     const e=document.querySelector(sel); if(!e)continue;
     const b=e.getBoundingClientRect(); if(!b.width||!b.height)continue;
     out.push({x:(b.left-r.left)*s,y:(b.top-r.top)*s,w:b.width*s,h:b.height*s});
@@ -302,12 +300,6 @@ function updateText(){
 }
 /* 下一次黃經距角 = target（0＝朔、1 80＝望），以平均角速做不動點迭代 */
 const RATE=360/29.530588853;
-function samePhaseJD(jd0,dir){
-  const target=buildScene(jd0).elongEcl;
-  let j=jd0+dir*360/RATE;
-  for(let i=0;i<8;i++) j-=n180(n360(buildScene(j).elongEcl-target))/RATE;
-  return j;
-}
 function nextPhase(jd0,target){
   const f=j=>n360(buildScene(j).elongEcl-target);
   let j=jd0+(360-f(jd0))/RATE;
@@ -436,8 +428,7 @@ function syncForm(){
   if(ST.syncB&&ST.playB) setPlay('B',false);
   FLD.forEach(f=>{const e=$(f+'B'); if(e)e.disabled=ST.syncB;});
   ['tNowB','tPlayB','tSpeedB'].forEach(id=>{const e=$(id); if(e)e.disabled=ST.syncB;});
-  document.querySelectorAll('[data-unit="B"][data-step],[data-unit="B"][data-cyc]')
-    .forEach(b=>{b.disabled=ST.syncB;});
+  document.querySelectorAll('[data-unit="B"][data-step]').forEach(b=>{b.disabled=ST.syncB;});
 }
 function bindForm(){
   for(const t of ['A','B']){
@@ -480,10 +471,6 @@ function bindForm(){
     $('tSpeed'+sfx).addEventListener('change',e=>{ST[t==='A'?'speed':'speedB']=+e.target.value;});
     $('tPlay'+sfx).addEventListener('click',()=>setPlay(t,!(t==='A'?ST.play:ST.playB)));
   }
-  document.querySelectorAll('[data-cyc]').forEach(b=>b.addEventListener('click',()=>{
-    const t=b.dataset.unit||'A';
-    setFromJD(ST[t],samePhaseJD(jdOf(ST[t]),+b.dataset.cyc));
-    if(t==='A')applySync(); syncForm(); refresh();}));
   document.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>{
     const t=b.dataset.unit||'A';
     setFromJD(ST[t],jdOf(ST[t])+(+b.dataset.step)/86400);
