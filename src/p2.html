@@ -1,0 +1,187 @@
+<div id="shell">
+
+<header id="top">
+  <div class="logo"></div>
+  <div class="hgrow hrow">
+    <h1 data-t="title">月相觀測模擬器</h1>
+    <span class="sub" data-t="sub">同一時刻、不同地點，月亮長得不一樣</span>
+  </div>
+  <div class="topbtns">
+    <button class="btn sm" id="btnScen" data-t="scen">情境</button>
+    <button class="btn sm" id="btnShare" data-t="share">連結</button>
+    <button class="btn sm" id="btnLang">EN</button>
+  </div>
+</header>
+
+<div id="main">
+
+  <!-- ============ 右側（橫式）／上方（直式）：兩組「地點＋時間＋月亮」 ============ -->
+  <section id="side">
+    <div id="units">
+
+      <!-- ===== A：地點四格 + 時間（驅動日–地–月幾何） ===== -->
+      <article class="card unit" id="unitA">
+        <div class="uloc">
+          <span class="tag tagA">A</span>
+          <div class="ug ugcity"><select id="ctryA"></select><select id="cityA"></select></div>
+          <div class="ug ugll">
+            <input type="number" class="ll" id="latA" step="0.0001" min="-90" max="90" title="lat">
+            <input type="number" class="ll" id="lonA" step="0.0001" min="-180" max="180" title="lon">
+            <button class="btn sm gps" id="geoA" title="GPS">◎</button>
+          </div>
+        </div>
+        <div class="trow">
+          <span class="swt sync1 ghost" aria-hidden="true"><span class="cbw"><span class="cbx"></span></span><span class="mini" data-t="sameInstant">同 A</span></span>
+          <div class="tgrid">
+            <div class="tg3">
+            <div><input type="number" id="yA" step="1" min="1600" max="2400"><label class="mini" data-t="yy">年</label></div>
+            <div><input type="number" id="moA" step="1"><label class="mini" data-t="mm">月</label></div>
+            <div><input type="number" id="dA" step="1"><label class="mini" data-t="dd">日</label></div>
+            </div>
+            <div class="tg3">
+            <div><input type="number" id="hA" step="1"><label class="mini" data-t="hh">時</label></div>
+            <div><input type="number" id="miA" step="1"><label class="mini" data-t="mi">分</label></div>
+            <div><input type="number" id="sA" step="1"><label class="mini" data-t="ss">秒</label></div>
+            </div>
+          </div>
+        </div>
+        <div class="qrow">
+          <div class="qg qg1">
+            <select id="offA" class="tzsel"></select>
+            <button class="btn sm" id="tNow" data-t="now">現在</button>
+            <button class="btn sm" id="tPlay">▶</button>
+            <select id="tSpeed">
+              <option value="60">×60</option><option value="600">×600</option>
+              <option value="3600" selected>×3.6k</option><option value="21600">×21k</option>
+              <option value="86400">×86k</option>
+            </select>
+          </div>
+          <div class="qg qg2">
+            <button class="btn sm" data-unit="A" data-step="-86400">−1d</button>
+            <button class="btn sm" data-unit="A" data-step="-3600">−1h</button>
+            <button class="btn sm" data-unit="A" data-step="3600">+1h</button>
+            <button class="btn sm" data-unit="A" data-step="86400">+1d</button>
+          </div>
+        </div>
+        <div class="ugrow" id="ugA"></div>
+        <div class="ucanvas" id="cwA"><canvas id="moonA"></canvas><div class="mbadge" id="badgeA" hidden></div>
+          <div class="mzoom"><span class="mzlab" id="mzlA" hidden>1.0&times;</span>
+            <button class="zb" id="mzoA">−</button><button class="zb" id="mziA">＋</button>
+            <button class="zb" id="mzrA" hidden>⟲</button></div></div>
+        <div class="ustats">
+          <div><b id="sAalt">—</b><span data-t="alt">高度</span></div>
+          <div><b id="sAaz">—</b><span data-t="az">方位</span></div>
+          <div><b id="sAil">—</b><span data-t="illum">照明</span></div>
+          <div><b id="sAage">—</b><span data-t="age">月齡</span></div>
+        </div>
+      </article>
+
+      <!-- ===== B ===== -->
+      <article class="card unit" id="unitB">
+        <div class="uloc">
+          <span class="tag tagB">B</span>
+          <div class="ug ugcity"><select id="ctryB"></select><select id="cityB"></select></div>
+          <div class="ug ugll">
+            <input type="number" class="ll" id="latB" step="0.0001" min="-90" max="90" title="lat">
+            <input type="number" class="ll" id="lonB" step="0.0001" min="-180" max="180" title="lon">
+            <button class="btn sm gps" id="geoB" title="GPS">◎</button>
+          </div>
+        </div>
+        <div class="trow frozen" id="btrow">
+          <label class="swt sync1" title="同 A 時刻 / Same instant as A">
+            <span class="cbw"><input type="checkbox" id="syncB" checked></span>
+            <span class="mini" data-t="sameInstant">同 A</span>
+          </label>
+          <div class="tgrid">
+            <div class="tg3">
+            <div><input type="number" id="yB" step="1" min="1600" max="2400"><label class="mini" data-t="yy">年</label></div>
+            <div><input type="number" id="moB" step="1"><label class="mini" data-t="mm">月</label></div>
+            <div><input type="number" id="dB" step="1"><label class="mini" data-t="dd">日</label></div>
+            </div>
+            <div class="tg3">
+            <div><input type="number" id="hB" step="1"><label class="mini" data-t="hh">時</label></div>
+            <div><input type="number" id="miB" step="1"><label class="mini" data-t="mi">分</label></div>
+            <div><input type="number" id="sB" step="1"><label class="mini" data-t="ss">秒</label></div>
+            </div>
+          </div>
+        </div>
+        <div class="qrow">
+          <div class="qg qg1">
+            <select id="offB" class="tzsel"></select>
+            <button class="btn sm" id="tNowB" data-t="now">現在</button>
+            <button class="btn sm" id="tPlayB">▶</button>
+            <select id="tSpeedB">
+              <option value="60">×60</option><option value="600">×600</option>
+              <option value="3600" selected>×3.6k</option><option value="21600">×21k</option>
+              <option value="86400">×86k</option>
+            </select>
+          </div>
+          <div class="qg qg2">
+            <button class="btn sm" data-unit="B" data-step="-86400">−1d</button>
+            <button class="btn sm" data-unit="B" data-step="-3600">−1h</button>
+            <button class="btn sm" data-unit="B" data-step="3600">+1h</button>
+            <button class="btn sm" data-unit="B" data-step="86400">+1d</button>
+          </div>
+        </div>
+        <div class="ugrow" id="ugB"></div>
+        <div class="ucanvas" id="cwB"><canvas id="moonB"></canvas><div class="mbadge" id="badgeB" hidden></div>
+          <div class="mzoom"><span class="mzlab" id="mzlB" hidden>1.0&times;</span>
+            <button class="zb" id="mzoB">−</button><button class="zb" id="mziB">＋</button>
+            <button class="zb" id="mzrB" hidden>⟲</button></div></div>
+        <div class="ustats">
+          <div><b id="sBalt">—</b><span data-t="alt">高度</span></div>
+          <div><b id="sBaz">—</b><span data-t="az">方位</span></div>
+          <div><b id="sBil">—</b><span data-t="illum">照明</span></div>
+          <div><b id="sBage">—</b><span data-t="age">月齡</span></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ 地球 ============ -->
+  <section id="gpane">
+    <canvas id="globe"></canvas>
+
+    <div class="gov tl">
+      <span class="pill" data-t="setTo">點擊設為</span>
+      <button class="btn sm tA on" id="tgtA">A</button>
+      <button class="btn sm tB" id="tgtB">B</button>
+      <button class="btn sm on" id="gLabels" data-t="labels">城市</button>
+    </div>
+    <div class="gov tr">
+      <button class="btn sm" id="gZin">＋</button>
+      <button class="btn sm" id="gZout">−</button>
+      <button class="btn sm" id="gToA" data-t="toA">看 A</button>
+      <button class="btn sm" id="gToB" data-t="toB">看 B</button>
+      <button class="btn sm" id="gSpin" data-t="spin">自轉</button>
+    </div>
+    <div id="legend">
+      <span><i class="dotA"></i>A</span><span><i class="dotB"></i>B</span>
+      <span><i class="dotS"></i><span data-t="subsolar">日下點</span></span>
+      <span><i class="dotM"></i><span data-t="sublunar">月下點</span></span>
+    </div>
+
+    <div id="drawer">
+      <div class="dpanel" data-p="sky">
+        <p class="dtitle" style="color:var(--A)">A</p><canvas class="skyc" id="skyA"></canvas>
+        <p class="dtitle" style="color:var(--B);margin-top:8px">B</p><canvas class="skyc" id="skyB"></canvas>
+      </div>
+      <div class="dpanel" data-p="geo" style="padding:7px 9px"><div id="geoWrap"><canvas id="geo"></canvas></div></div>
+      <div class="dpanel" data-p="tbl" style="padding:4px 8px"><table class="cmp" id="cmpTbl"></table></div>
+      <div class="dpanel" data-p="note"><div class="notes" id="notes"></div></div>
+    </div>
+
+    <div id="tabbar">
+      <button class="tb" data-p="sky" data-t="tabSky">天空</button>
+      <button class="tb" data-p="geo" data-t="tabGeo">幾何</button>
+      <button class="tb" data-p="tbl" data-t="tabTbl">數據</button>
+      <button class="tb" data-p="note" data-t="tabNote">說明</button>
+      <span class="grow"></span>
+      <span id="gInfo"></span>
+    </div>
+  </section>
+
+</div>
+</div>
+<div id="toast"></div>

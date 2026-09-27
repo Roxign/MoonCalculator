@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>月相觀測模擬器 · Moon View Simulator</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#05070e; --card:#0f1523; --card2:#141b2c; --inp:#0b1120;
+  --line:#22304a; --line2:#2e3f5e; --txt:#e8eefb; --dim:#8b9ab5; --dim2:#67789a;
+  --A:#45d9e8; --Ad:#0d3a46; --B:#ffb35c; --Bd:#46320f; --acc:#8aa8ff;
+  --r:11px; --sh:0 5px 18px rgba(0,0,0,.42);
+  --moonw:240px; --drawerh:0px;
+}
+html,body{margin:0;padding:0;height:100%;overflow:hidden}
+body{
+  background:radial-gradient(1200px 700px at 80% -10%,#15214a 0%,rgba(8,11,22,0) 62%),
+             radial-gradient(900px 520px at 4% 108%,#0f2738 0%,rgba(8,11,22,0) 60%),var(--bg);
+  color:var(--txt);
+  font:13.5px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+}
+#shell{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ---------- header ---------- */
+header#top{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:5px 10px 5px;min-width:0}
+.logo{width:26px;height:26px;flex:0 0 26px;border-radius:50%;
+  background:radial-gradient(circle at 34% 32%,#f4f1e6,#b9b4a4 55%,#6d6a60 100%);
+  box-shadow:0 0 16px rgba(220,225,255,.26),inset -5px -3px 9px rgba(0,0,0,.45)}
+h1{font-size:clamp(13px,2vw,16px);margin:0;font-weight:650;letter-spacing:.2px;white-space:nowrap;flex:0 0 auto}
+.hrow{display:flex;align-items:baseline;gap:8px;min-width:0}
+.sub{margin:0;font-size:10.5px;color:var(--dim2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+.hgrow{flex:1 1 auto;min-width:0}
+.topbtns{display:flex;gap:5px;flex:0 0 auto}
+
+/* ---------- generic ---------- */
+.btn{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:8px;
+  padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;transition:.13s;white-space:nowrap}
+.btn:hover{background:#1d2740;border-color:var(--line2)}
+.btn:active{transform:translateY(1px)}
+.btn.sm{padding:4px 8px;font-size:11px;border-radius:7px}
+.btn.xs{padding:3px 6px;font-size:10.5px;border-radius:6px}
+.btn.on{background:linear-gradient(180deg,#2a3f6b,#1d2c4e);border-color:#3f5c95;color:#dce7ff}
+.btn.tA.on{background:linear-gradient(180deg,#0f4b5a,#0b3743);border-color:#1d7f95;color:#b9f4ff}
+.btn.tB.on{background:linear-gradient(180deg,#5c4113,#3d2b0c);border-color:#96701f;color:#ffe2b3}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,0)),var(--card);
+  border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+input,select{background:var(--inp);color:var(--txt);border:1px solid var(--line);border-radius:7px;
+  padding:5px 6px;font:inherit;font-size:12px;width:100%;min-width:0;font-variant-numeric:tabular-nums}
+select{padding-right:2px}
+input:focus,select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 2px rgba(138,168,255,.16)}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+label.mini{display:block;font-size:9px;color:var(--dim2);margin:0 0 2px 1px;letter-spacing:.2px;text-align:center}
+canvas{display:block;touch-action:none}
+[hidden]{display:none!important}
+.grow{flex:1 1 auto;min-width:0}
+
+/* ---------- main grid : PORTRAIT (base) ---------- */
+#main{flex:1 1 auto;min-height:0;display:grid;gap:8px;padding:0 8px 8px;
+  grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+#side{grid-row:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+#gpane{grid-row:2;min-height:200px}
+#units{display:grid;gap:8px;grid-template-columns:1fr 1fr;align-items:stretch}
+
+/* ---------- main grid : LANDSCAPE ---------- */
+@media (min-aspect-ratio:11/10){
+  #main{grid-template-columns:minmax(0,1fr) clamp(320px,30vw,432px);grid-template-rows:minmax(0,1fr)}
+  #side{grid-row:1;grid-column:2;overflow-y:auto;overflow-x:hidden;padding-right:2px}
+  #gpane{grid-row:1;grid-column:1}
+  #units{grid-template-columns:1fr}
+}
+
+/* ---------- time card ---------- */
+.trow{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.tlabel{font-size:10px;color:var(--acc);letter-spacing:.4px;font-weight:600;
+  display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap}
+.tlabel .hint{color:var(--dim2);font-weight:400;letter-spacing:0}
+.tgrid{flex:1 1 0;min-width:0;display:flex;flex-wrap:wrap;gap:4px}
+.tg3{flex:1 1 112px;min-width:0;display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:4px}
+.tg3+.tg3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tg3>div{display:flex;align-items:center;gap:2px;min-width:0}
+.tgrid input{flex:1 1 0;min-width:0;padding:4px 1px;font-size:11.5px;text-align:center}
+.tgrid label.mini{flex:0 0 auto;display:block;margin:0;font-size:9px}
+/* 同 A 核取方塊：與時間格同列，方塊在前、標籤在後 */
+.swt.sync1{flex:0 0 auto;display:flex;flex-direction:row;align-items:center;gap:3px;cursor:pointer;user-select:none}
+.sync1 .mini{display:block;font-size:9px;color:var(--dim2);margin:0;white-space:nowrap}
+.sync1 .cbw{display:grid;place-items:center;padding:0}
+.sync1 input{width:auto;margin:0;padding:0;accent-color:var(--acc);cursor:pointer}
+.ghost{visibility:hidden;pointer-events:none}
+.ghost .cbx{display:block;width:13px;height:13px}
+.tgrid input:disabled{opacity:.42;cursor:not-allowed;-webkit-text-fill-color:var(--txt)}
+.btn:disabled,select:disabled{opacity:.42;cursor:not-allowed}
+.trow.frozen .tgrid label.mini{opacity:.5}
+.tzsel{flex:0 1 96px;min-width:0;font-size:11px;padding:4px 2px}
+/* 直式：時區/現在/播放/速度一列，−1d 等一列；橫式：全部同列（下方覆寫） */
+.qrow{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;align-items:center}
+.qg{display:flex;gap:4px;align-items:center;min-width:0;flex-wrap:wrap}
+.qg1,.qg2{flex:1 1 100%}
+.qrow .btn{flex:0 0 auto;padding:3px 6px;font-size:10.5px;white-space:nowrap}
+.qg2 .btn{flex:1 1 0;min-width:0}
+@container (min-width:200px){.qg{flex-wrap:nowrap}}
+#tSpeed,#tSpeedB{width:auto;flex:0 1 auto;min-width:0;font-size:11px;padding:4px 4px}
+@media (min-aspect-ratio:11/10){
+  .qrow,.qg{flex-wrap:nowrap;gap:3px}
+  .qg1{flex:0 1 auto}
+  .qg2{flex:0 0 auto;margin-left:auto}
+  .qrow .btn{padding:3px 5px;font-size:10px;letter-spacing:-.2px}
+  .qg2 .btn{flex:0 0 auto}
+  .tgrid,.tg3{gap:3px}
+}
+
+/* ---------- unit (地點 + 月亮) ---------- */
+.unit{display:flex;flex-direction:column;padding:6px 7px 0;overflow:hidden;container-type:inline-size}
+.uhead{display:flex;align-items:center;gap:5px;min-width:0}
+.tag{font-size:10.5px;font-weight:700;width:18px;height:18px;border-radius:5px;display:grid;place-items:center;flex:0 0 18px}
+.tagA{background:var(--Ad);color:var(--A);box-shadow:inset 0 0 0 1px rgba(69,217,232,.45)}
+.tagB{background:var(--Bd);color:var(--B);box-shadow:inset 0 0 0 1px rgba(255,179,92,.45)}
+.uplace{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;flex:0 1 auto;min-width:1.6em}
+.ibtn{background:none;border:1px solid var(--line);color:var(--dim);border-radius:6px;
+  padding:1px 5px;font-size:11px;cursor:pointer;flex:0 0 auto;line-height:1.5}
+.ibtn.on{border-color:var(--acc);color:var(--acc)}
+.utime{font-size:9.5px;color:var(--dim2);font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-left:auto;flex:0 1 auto;min-width:0;padding-left:4px}
+.ugrow{flex:1 1 auto;min-height:6px}
+.uloc{display:flex;gap:4px;flex-wrap:wrap;align-items:center;row-gap:4px}
+.ug{display:flex;gap:4px;align-items:center;min-width:0}
+.ugcity{flex:1 1 118px}
+.ugll{flex:1 1 138px}
+.uloc select{flex:1 1 0;min-width:0}
+.uloc .ll{flex:1 1 0;min-width:0;text-align:center}
+.uloc .gps{flex:0 0 auto;padding:4px 6px}
+.uloc input{padding:4px 3px;font-size:11px}
+.uloc .tag{margin-right:1px}
+.ucoord{display:flex;gap:4px;margin-top:4px}
+.ucoord input{flex:1 1 0}
+.ucoord .btn{flex:0 0 auto;padding:4px 7px}
+.swt{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--dim);cursor:pointer;user-select:none;white-space:nowrap}
+.swt input{width:auto;margin:0;accent-color:var(--acc);padding:0}
+.ucanvas{position:relative;width:var(--moonw);max-width:100%;aspect-ratio:1/1;margin:0 auto;
+  background:#04060d;border-radius:9px;overflow:hidden;border:1px solid rgba(34,48,74,.8)}
+.ucanvas canvas{position:absolute;inset:0;width:100%;height:100%}
+.mzoom{position:absolute;right:5px;bottom:5px;display:flex;gap:3px;align-items:center;z-index:3}
+.mzoom .zb{background:rgba(10,15,26,.82);border:1px solid var(--line);color:var(--dim);
+  border-radius:6px;padding:1px 6px;font-size:12px;line-height:1.5;cursor:pointer;
+  backdrop-filter:blur(5px);font-family:inherit}
+.mzoom .zb:hover{color:var(--txt);border-color:var(--line2)}
+.mzlab{font-size:9.5px;color:var(--dim2);background:rgba(10,15,26,.8);border:1px solid var(--line);
+  border-radius:6px;padding:1px 5px;backdrop-filter:blur(5px);font-variant-numeric:tabular-nums}
+.ucanvas canvas{cursor:crosshair}
+.ucanvas.pan canvas{cursor:grab}
+.mbadge{position:absolute;left:50%;transform:translateX(-50%);bottom:7px;font-size:10px;
+  padding:2px 8px;border-radius:99px;background:rgba(6,10,18,.8);border:1px solid var(--line2);
+  color:var(--dim);backdrop-filter:blur(4px);white-space:nowrap}
+.mbadge.warn{color:#ffc7bd;border-color:#6b3229;background:rgba(48,14,10,.75)}
+.ustats{display:grid;grid-template-columns:repeat(4,1fr);margin:6px -7px 0;border-top:1px solid var(--line)}
+.ustats>div{padding:4px 3px;border-right:1px solid var(--line);
+  display:flex;flex-direction:row-reverse;align-items:baseline;justify-content:center;
+  gap:4px;white-space:nowrap;overflow:hidden}
+.ustats>div:last-child{border-right:none}
+
+.ustats b{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.ustats span{font-size:9.5px;color:var(--dim2)}
+@media (max-width:560px){ .tlabel .hint{display:none}
+  .ustats{grid-template-columns:repeat(2,1fr)}
+  .ustats>div:nth-child(2n){border-right:none}
+  .ustats>div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .ustats b{font-size:12px} }
+
+/* ---------- globe pane ---------- */
+#gpane{position:relative;overflow:hidden;border-radius:var(--r);border:1px solid var(--line);
+  background:#03050b;box-shadow:var(--sh)}
+#globe{position:absolute;inset:0;width:100%;height:100%}
+.gov{position:absolute;display:flex;gap:4px;z-index:6}
+.gov.tl{top:7px;left:7px;flex-wrap:wrap;max-width:calc(100% - 14px);align-items:center}
+.gov.tr{top:7px;right:7px;flex-direction:column;align-items:flex-end}
+.gov .btn{background:rgba(13,19,32,.84);backdrop-filter:blur(7px)}
+.pill{font-size:10px;color:var(--dim);background:rgba(10,15,26,.8);border:1px solid var(--line);
+  border-radius:7px;padding:3px 7px;display:flex;align-items:center;gap:4px;backdrop-filter:blur(6px);white-space:nowrap}
+.dotA,.dotB,.dotS,.dotM{width:7px;height:7px;border-radius:50%;flex:0 0 7px}
+.dotA{background:var(--A);box-shadow:0 0 6px var(--A)}
+.dotB{background:var(--B);box-shadow:0 0 6px var(--B)}
+.dotS{background:#ffd75e;box-shadow:0 0 6px #ffd75e}
+.dotM{background:#dfe6f5;box-shadow:0 0 6px #dfe6f5}
+#legend{position:absolute;left:7px;bottom:40px;z-index:5;display:flex;gap:8px;flex-wrap:wrap;
+  font-size:10px;color:var(--dim2);background:rgba(4,7,14,.62);padding:3px 7px;border-radius:7px;
+  border:1px solid var(--line);backdrop-filter:blur(5px)}
+#legend span{display:flex;align-items:center;gap:3px}
+
+/* ---------- tab bar + drawer ---------- */
+#tabbar{position:absolute;left:0;right:0;bottom:0;height:32px;display:flex;gap:2px;align-items:center;
+  padding:0 6px;background:rgba(7,11,20,.9);backdrop-filter:blur(9px);border-top:1px solid var(--line);z-index:8}
+#tabbar .tb{background:none;border:none;color:var(--dim2);font:inherit;font-size:11.5px;
+  padding:5px 9px;border-radius:6px;cursor:pointer;white-space:nowrap}
+#tabbar .tb:hover{color:var(--txt)}
+#tabbar .tb.on{background:#1b2540;color:#cfe0ff}
+#gInfo{font-size:9.5px;color:var(--dim2);font-variant-numeric:tabular-nums;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;padding-right:2px}
+#drawer{position:absolute;left:0;right:0;bottom:32px;height:0;overflow:hidden;z-index:7;
+  background:rgba(8,12,21,.955);backdrop-filter:blur(11px);border-top:1px solid var(--line);
+  transition:height .2s ease}
+/* 直式：抽屜改為覆蓋式底部面板，地球不被壓縮 */
+@media (max-aspect-ratio:11/10){
+  #drawer{position:fixed;left:8px;right:8px;bottom:40px;border:1px solid var(--line);
+    border-radius:11px 11px 0 0;box-shadow:0 -10px 34px rgba(0,0,0,.6)}
+}
+#drawer.open{height:var(--drawerh)}
+.dpanel{display:none;height:100%;overflow-y:auto;padding:9px 11px}
+.dpanel.on{display:block}
+.dtitle{font-size:10px;color:var(--dim2);margin:0 0 3px 2px;letter-spacing:.3px}
+.skyc{width:100%;border-radius:7px}
+#geoWrap{width:100%;height:calc(100% - 4px);min-height:120px;display:grid;place-items:center}
+#geo{border-radius:7px;max-width:100%}
+table.cmp{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
+table.cmp th,table.cmp td{padding:4px 8px;border-bottom:1px solid rgba(34,48,74,.6);text-align:right;white-space:nowrap}
+table.cmp th{text-align:left;color:var(--dim2);font-weight:400;font-size:10.5px;width:36%;white-space:normal}
+table.cmp td.a{color:#c9f6fd} table.cmp td.b{color:#ffe3bd}
+table.cmp thead td{font-weight:700;font-size:11px}
+table.cmp tr.grp th{color:var(--acc);font-size:10px;letter-spacing:.4px;padding-top:8px;text-transform:uppercase}
+.notes{font-size:11.5px;color:var(--dim);line-height:1.7;max-width:820px}
+.notes b{color:var(--txt);font-weight:600}
+.notes ul{margin:5px 0 10px;padding-left:16px}
+.notes li{margin-bottom:4px}
+.k{color:var(--A)}
+
+/* ---------- misc ---------- */
+#loader{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:99;
+  transition:opacity .4s;font-size:12.5px;color:var(--dim)}
+#loader.gone{opacity:0;pointer-events:none}
+.spin{width:30px;height:30px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--A);
+  animation:sp .9s linear infinite;margin:0 auto 11px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toast{position:fixed;left:50%;bottom:52px;transform:translate(-50%,14px);background:#18233a;
+  border:1px solid var(--line2);border-radius:9px;padding:8px 14px;font-size:12px;z-index:80;
+  opacity:0;pointer-events:none;transition:.2s;box-shadow:var(--sh);max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#22304a;border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+<div id="loader"><div style="text-align:center"><div class="spin"></div><div id="ldtxt">載入中…</div></div></div>
