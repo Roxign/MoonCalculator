@@ -50,10 +50,13 @@
             <select id="offA" class="tzsel"></select>
             <button class="btn sm" id="tNow" data-t="now">現在</button>
             <button class="btn sm" id="tPlay">▶</button>
-            <select id="tSpeed">
-              <option value="60">×60</option><option value="600">×600</option>
-              <option value="3600" selected>×3.6k</option><option value="21600">×21k</option>
-              <option value="86400">×86k</option>
+            <select id="tSpeed" title="每 1 秒實際時間前進的模擬時間 / simulated time per real second">
+              <option value="1" data-t="sp1">×1秒</option>
+              <option value="60" data-t="sp60">×1分</option>
+              <option value="600" data-t="sp600">×10分</option>
+              <option value="3600" selected data-t="sp3600">×1時</option>
+              <option value="21600" data-t="sp21600">×6時</option>
+              <option value="86400" data-t="sp86400">×1日</option>
             </select>
           </div>
           <div class="qg qg2">
@@ -64,16 +67,18 @@
           </div>
         </div>
         <div class="ugrow" id="ugA"></div>
-        <div class="ucanvas" id="cwA"><canvas id="moonA"></canvas><div class="mbadge" id="badgeA" hidden></div>
-          <div class="mzoom"><span class="mzlab" id="mzlA" hidden>1.0&times;</span>
-            <button class="zb" id="mzoA">−</button><button class="zb" id="mziA">＋</button>
-            <button class="zb" id="mzrA" hidden>⟲</button></div></div>
-        <div class="ustats">
+        <div class="ucanvas" id="cwA"><canvas id="moonA"></canvas>
+        <div class="ustats" id="stA">
           <div><b id="sAalt">—</b><span data-t="alt">高度</span></div>
           <div><b id="sAaz">—</b><span data-t="az">方位</span></div>
           <div><b id="sAil">—</b><span data-t="illum">照明</span></div>
           <div><b id="sAage">—</b><span data-t="age">月齡</span></div>
         </div>
+          <div class="mbadge" id="badgeA" hidden></div>
+          <div class="mzoom"><span class="mzlab" id="mzlA" hidden>1.0&times;</span>
+            <button class="zb mtog" id="mtgA" title="數值 / Stats">ⓘ</button>
+            <button class="zb" id="mzoA">−</button><button class="zb" id="mziA">＋</button>
+            <button class="zb" id="mzrA" hidden>⟲</button></div></div>
       </article>
 
       <!-- ===== B ===== -->
@@ -110,10 +115,13 @@
             <select id="offB" class="tzsel"></select>
             <button class="btn sm" id="tNowB" data-t="now">現在</button>
             <button class="btn sm" id="tPlayB">▶</button>
-            <select id="tSpeedB">
-              <option value="60">×60</option><option value="600">×600</option>
-              <option value="3600" selected>×3.6k</option><option value="21600">×21k</option>
-              <option value="86400">×86k</option>
+            <select id="tSpeedB" title="每 1 秒實際時間前進的模擬時間 / simulated time per real second">
+              <option value="1" data-t="sp1">×1秒</option>
+              <option value="60" data-t="sp60">×1分</option>
+              <option value="600" data-t="sp600">×10分</option>
+              <option value="3600" selected data-t="sp3600">×1時</option>
+              <option value="21600" data-t="sp21600">×6時</option>
+              <option value="86400" data-t="sp86400">×1日</option>
             </select>
           </div>
           <div class="qg qg2">
@@ -124,16 +132,18 @@
           </div>
         </div>
         <div class="ugrow" id="ugB"></div>
-        <div class="ucanvas" id="cwB"><canvas id="moonB"></canvas><div class="mbadge" id="badgeB" hidden></div>
-          <div class="mzoom"><span class="mzlab" id="mzlB" hidden>1.0&times;</span>
-            <button class="zb" id="mzoB">−</button><button class="zb" id="mziB">＋</button>
-            <button class="zb" id="mzrB" hidden>⟲</button></div></div>
-        <div class="ustats">
+        <div class="ucanvas" id="cwB"><canvas id="moonB"></canvas>
+        <div class="ustats" id="stB">
           <div><b id="sBalt">—</b><span data-t="alt">高度</span></div>
           <div><b id="sBaz">—</b><span data-t="az">方位</span></div>
           <div><b id="sBil">—</b><span data-t="illum">照明</span></div>
           <div><b id="sBage">—</b><span data-t="age">月齡</span></div>
         </div>
+          <div class="mbadge" id="badgeB" hidden></div>
+          <div class="mzoom"><span class="mzlab" id="mzlB" hidden>1.0&times;</span>
+            <button class="zb mtog" id="mtgB" title="數值 / Stats">ⓘ</button>
+            <button class="zb" id="mzoB">−</button><button class="zb" id="mziB">＋</button>
+            <button class="zb" id="mzrB" hidden>⟲</button></div></div>
       </article>
 
     </div>
@@ -144,22 +154,14 @@
     <canvas id="globe"></canvas>
 
     <div class="gov tl">
-      <span class="pill" data-t="setTo">點擊設為</span>
-      <button class="btn sm tA on" id="tgtA">A</button>
-      <button class="btn sm tB" id="tgtB">B</button>
+      <button class="btn sm tA on" id="tgtA" title="選取 A：移到 A，點地球即設為 A / Select A: go to A, tap map to set A">A</button>
+      <button class="btn sm tB" id="tgtB" title="選取 B：移到 B，點地球即設為 B / Select B: go to B, tap map to set B">B</button>
       <button class="btn sm on" id="gLabels" data-t="labels">城市</button>
     </div>
     <div class="gov tr">
       <button class="btn sm" id="gZin">＋</button>
       <button class="btn sm" id="gZout">−</button>
-      <button class="btn sm" id="gToA" data-t="toA">看 A</button>
-      <button class="btn sm" id="gToB" data-t="toB">看 B</button>
       <button class="btn sm" id="gSpin" data-t="spin">自轉</button>
-    </div>
-    <div id="legend">
-      <span><i class="dotA"></i>A</span><span><i class="dotB"></i>B</span>
-      <span><i class="dotS"></i><span data-t="subsolar">日下點</span></span>
-      <span><i class="dotM"></i><span data-t="sublunar">月下點</span></span>
     </div>
 
     <div id="drawer">

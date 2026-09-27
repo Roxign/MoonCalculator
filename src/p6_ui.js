@@ -18,20 +18,24 @@ const I18N={zh:{
  timeTitle:'時間（觀測點 A 當地）', drivesGeom:'· 決定日–地–月幾何',
  aDrives:'上方時間即為此處的當地時間', sameInstant:'同 A',
  yy:'年',mm:'月',dd:'日',hh:'時',mi:'分',ss:'秒',tz:'時區', now:'現在',
- setTo:'點擊設為', toA:'看 A', toB:'看 B', spin:'自轉', labels:'城市',
+ spin:'自轉', labels:'城市',
  subsolar:'日下點', sublunar:'月下點',
  tabSky:'天空', tabGeo:'幾何', tabTbl:'數據', tabNote:'說明',
  country:'國家 / 地區', customC:'—（自訂座標）', custom:'自訂位置',
  auto:'當地時區', autoLon:'依經度',
+ sp1:'×1秒', sp60:'×1分', sp600:'×10分', sp3600:'×1時', sp21600:'×6時', sp86400:'×1日',
  copied:'連結已複製', copyFail:'無法複製，請手動複製網址', gpsFail:'無法取得定位',
- below:'地平線下', daylit:'白天（低對比）',
+ below:'地平線下', daylit:'白天',
  dirs:['北','北北東','東北','東北東','東','東南東','東南','南南東','南','南南西','西南','西南西','西','西北西','西北','北北西'],
  ph:{new:'朔（新月）',wxc:'眉月',fq:'上弦月',wxg:'盈凸月',full:'望（滿月）',wng:'虧凸月',lq:'下弦月',wnc:'殘月'},
  rows:{obs:'觀測點',loc:'地點',coord:'座標',ltime:'當地時間',utc:'世界時 UTC',
   moon:'月亮',malt:'視高度',maz:'方位角',limb:'亮面朝向 ↻自天頂',pole:'天北極 ↻自天頂',
   ill:'照明率',agep:'月齡 / 相位',pang:'相位角',elo:'日月距角',lib:'天平動 經/緯',
   dist:'地心距 / 視直徑',rs:'月出 / 中天 / 月落',
-  sky:'太陽與天色',salt:'太陽高度',saz:'太陽方位',state:'天色',vis:'可見性'},
+  sky:'太陽與天色',salt:'太陽高度',saz:'太陽方位',state:'天色',vis:'可見性',
+  srs:'日出 / 中天 / 日落',
+  diff:'A − B 差異',dlimb:'亮面朝向差',dpole:'月面轉角差',dalt:'視高度差',dill:'照明率差',
+  sched:'月相日程',nnew:'下次朔（新月）',nfull:'下次望（滿月）',tonext:'距現在'},
  skies:['夜晚','天文曙暮光','航海曙暮光','民用曙暮光','白天'],
  visOK:'地平線上', visNo:'地平線下（看不到）', up:'整天在上', down:'整天在下',
  notesHtml:`<b>為什麼兩地的月亮不一樣？</b>
@@ -41,32 +45,38 @@ const I18N={zh:{
  <li><b>天平動</b>：月球自轉與公轉同步，但軌道是橢圓且轉軸微傾，我們能前後左右多看到約 ±8°，累計可見約 59% 的月面。</li>
  <li><b>可見與否</b>：同一時刻，一地月亮高掛、另一地可能還在地平線下。月出月落與天色都在「數據」頁。</li>
  <li><b>視直徑</b>：近地點與遠地點相差約 12%；在天頂看比在地平線看近約 1.7%（站心視差）。</li>
+ <li><b>A − B 差異</b>：「數據」頁最下方直接給出兩地的<b>月面轉角差</b>——就是兩張月面圖看起來差多少。接近 180° 就是完全上下顯倒；照明率差則幾乎永遠是 0，除非兩邊時刻不同。</li>
+ <li><b>下次朔／望</b>：朔是月球與太陽黃經相同的<b>瞬間</b>，望是相差 180°；列出的是換算成 A 當地時間的瞬間，不是「那一天」。</li>
+ <li><b>日出日落</b>：跟月出月落放在一起看，就能判斷什麼時候最好看——月亮在地平線上、太陽已經下山。</li>
  </ul>
  <b>操作</b>
  <ul>
  <li>地球可拖曳旋轉、滾輪或雙指縮放；<b>直接點城市名稱</b>即可設為觀測點，點其他位置則設為自訂座標。放大後會顯示更多城市。</li>
- <li>上方時間決定整個日–地–月幾何；B 預設與 A 同一時刻，取消勾選可比較不同時間。</li>
+ <li>地球左上的 <b>A</b>／<b>B</b> 一鍵兩用：把視角移到該點，同時決定之後點地球會設到哪一個觀測點。</li>
+ <li>A 卡片的時間決定整個日–地–月幾何；B 預設與 A 同一時刻（欄位凍結），取消勾選後 B 可獨立調時間與播放。</li>
+ <li>播放速度的 <b>×1時</b> 表示「實際每過 1 秒，模擬時間前進 1 小時」。月面右下的 <b>ⓘ</b> 可收放高度／方位等數值疊層。</li>
  </ul>
  <b>精度與資料來源</b>
  <ul>
  <li>月球位置採 Meeus《Astronomical Algorithms》第 47 章 ELP-2000/82 截斷級數（約 10 角秒），太陽第 25 章，含章動與 ΔT。</li>
  <li>月面座標以 Cassini 定律建立本體座標系，含光學天平動（未含 &lt;0.04° 的物理天平動）。</li>
  <li>地球貼圖為 NASA Blue Marble Next Generation 衛星影像 2048×1024（無雲、含海底地形），採 mipmap LOD、分塊時間切片與 Web Worker 並行著色（不支援時自動退回單執行緒分塊）。</li>
- <li>月面貼圖來自 three.js 範例素材。所有貼圖已內嵌於本檔，離線可用。</li>
+ <li>月面貼圖為 Solar System Scope 的 8K 月面圖，裁切至正面 ±102°；夜間燈光來自 three.js 範例素材。所有貼圖已內嵌於本檔，離線可用。</li>
  </ul>`
 },en:{
  title:'Moon View Simulator', sub:'Same moment, different places — the Moon looks different',
  scen:'Scenarios', share:'Link', alt:'Alt', az:'Az', illum:'Illum', age:'Age',
  timeTitle:'Time (local at observer A)', drivesGeom:'· drives Sun–Earth–Moon geometry',
  aDrives:'the time above is this observer’s local time', sameInstant:'Sync A',
- yy:'Year',mm:'Mon',dd:'Day',hh:'Hour',mi:'Min',ss:'Sec',tz:'Zone', now:'Now',
- setTo:'Tap sets', toA:'Go A', toB:'Go B', spin:'Spin', labels:'Cities',
+ yy:'Y',mm:'Mo',dd:'D',hh:'h',mi:'m',ss:'s',tz:'Zone', now:'Now',
+ spin:'Spin', labels:'Cities',
  subsolar:'Subsolar', sublunar:'Sublunar',
  tabSky:'Sky', tabGeo:'Geometry', tabTbl:'Data', tabNote:'Notes',
  country:'Country / region', customC:'— (custom)', custom:'Custom location',
- auto:'Local zone', autoLon:'By longitude',
+ auto:'Local', autoLon:'By lon.',
+ sp1:'×1s', sp60:'×1m', sp600:'×10m', sp3600:'×1h', sp21600:'×6h', sp86400:'×1d',
  copied:'Link copied', copyFail:'Copy failed — copy the URL manually', gpsFail:'Location unavailable',
- below:'Below horizon', daylit:'Daylight (low contrast)',
+ below:'Below horizon', daylit:'Daylight',
  dirs:['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'],
  ph:{new:'New Moon',wxc:'Waxing Crescent',fq:'First Quarter',wxg:'Waxing Gibbous',
      full:'Full Moon',wng:'Waning Gibbous',lq:'Last Quarter',wnc:'Waning Crescent'},
@@ -74,7 +84,10 @@ const I18N={zh:{
   moon:'Moon',malt:'Apparent altitude',maz:'Azimuth',limb:'Bright limb ↻from zenith',pole:'Celestial N ↻from zenith',
   ill:'Illuminated',agep:'Age / phase',pang:'Phase angle',elo:'Elongation',lib:'Libration lon/lat',
   dist:'Distance / ang. diameter',rs:'Rise / transit / set',
-  sky:'Sun & sky',salt:'Sun altitude',saz:'Sun azimuth',state:'Sky',vis:'Visibility'},
+  sky:'Sun & sky',salt:'Sun altitude',saz:'Sun azimuth',state:'Sky',vis:'Visibility',
+  srs:'Sunrise / noon / sunset',
+  diff:'A − B',dlimb:'Bright-limb angle',dpole:'Moon-face rotation',dalt:'Altitude',dill:'Illuminated',
+  sched:'Phase schedule',nnew:'Next new moon',nfull:'Next full moon',tonext:'from now'},
  skies:['Night','Astronomical twilight','Nautical twilight','Civil twilight','Daylight'],
  visOK:'Above horizon', visNo:'Below horizon (not visible)', up:'Up all day', down:'Down all day',
  notesHtml:`<b>Why does the Moon look different in two places?</b>
@@ -84,23 +97,28 @@ const I18N={zh:{
  <li><b>Libration.</b> Rotation is synchronous, but the orbit is elliptical and slightly tilted, so the Moon rocks by about ±8° and 59% of its surface becomes visible over time.</li>
  <li><b>Visibility.</b> At one instant the Moon can be high for one observer and below the horizon for the other. Rise/transit/set and sky brightness are on the Data tab.</li>
  <li><b>Angular size</b> varies ~12% between perigee and apogee, and ~1.7% between horizon and zenith.</li>
+ <li><b>A − B.</b> The bottom of the Data tab gives the <b>moon-face rotation difference</b> directly — how much the two Moon images differ. Near 180° means completely upside down. The illumination difference stays ~0 unless the two times differ.</li>
+ <li><b>Next new / full moon.</b> New moon is the <b>instant</b> the Moon and Sun share the same ecliptic longitude; full moon is 180° apart. The times shown are that instant in A's local time, not "that day".</li>
+ <li><b>Sunrise / sunset</b> next to moonrise / moonset tells you when viewing is best — Moon up, Sun down.</li>
  </ul>
  <b>Controls</b>
  <ul>
  <li>Drag the globe to rotate, wheel/pinch to zoom. <b>Tap a city name</b> to set that observer; tap anywhere else for custom coordinates. Zooming in reveals more cities.</li>
- <li>The time above drives the whole Sun–Earth–Moon geometry. B defaults to the same instant as A; uncheck to compare different times.</li>
+ <li>The <b>A</b>/<b>B</b> buttons at the top-left of the globe do two things at once: move the view to that observer, and choose which observer a tap on the globe will set.</li>
+ <li>The time in card A drives the whole Sun–Earth–Moon geometry. B defaults to the same instant as A (its fields are frozen); uncheck to give B its own time and playback.</li>
+ <li>A playback speed of <b>×1h</b> means “one real second advances the simulation by one hour”. The <b>ⓘ</b> button at the bottom-right of each Moon hides or shows the altitude/azimuth overlay.</li>
  </ul>
  <b>Accuracy & sources</b>
  <ul>
  <li>Moon: Meeus, <i>Astronomical Algorithms</i> ch. 47 (truncated ELP-2000/82, ~10&Prime;). Sun: ch. 25. Nutation and ΔT included.</li>
  <li>Lunar orientation from Cassini's laws (optical libration; physical libration &lt;0.04° omitted).</li>
  <li>Earth texture: NASA Blue Marble Next Generation 2048×1024 (cloud-free, with bathymetry), drawn with mipmap LOD, time-sliced chunked shading and Web&nbsp;Worker parallelism (falls back to single-threaded chunks).</li>
- <li>Moon texture from the three.js example assets. All textures are embedded in this file — works offline.</li>
+ <li>Moon texture: Solar System Scope 8K lunar map, cropped to the near side (±102°); night lights from the three.js example assets. All textures are embedded in this file — works offline.</li>
  </ul>`
 }};
 let T=I18N.zh;
 
-const ST={lang:'zh',target:'A',trueSize:true,play:false,speed:3600,
+const ST={lang:'zh',target:'A',trueSize:true,stats:false,play:false,speed:3600,
   playB:false,speedB:3600,syncB:true,scen:0,tab:null,
   A:{name:0,lat:25.0330,lon:121.5654,tz:'Asia/Taipei',off:'auto',y:2026,mo:1,d:1,h:20,mi:0,s:0},
   B:{name:0,lat:-33.8688,lon:151.2093,tz:'Australia/Sydney',off:'auto',y:2026,mo:1,d:1,h:23,mi:0,s:0},
@@ -145,6 +163,8 @@ function applySync(){ if(ST.syncB) setFromJD(ST.B,jdOf(ST.A)); }
 const p2=n=>String(n).padStart(2,'0');
 const fmtT=v=>v.y+'-'+p2(v.mo)+'-'+p2(v.d)+' '+p2(v.h)+':'+p2(v.mi)+':'+p2(Math.round(v.s));
 const fmtOff=o=>{const s=o<0?'−':'+',a=Math.abs(o);return 'UTC'+s+p2(Math.floor(a))+':'+p2(Math.round((a%1)*60));};
+const fmtOffSel=o=>{const s=o<0?'−':'+',a=Math.abs(o);
+  return s+p2(Math.floor(a))+':'+p2(Math.round((a%1)*60));};
 const fmtOffS=o=>{const s=o<0?'−':'+',a=Math.abs(o),m=Math.round((a%1)*60);
   return s+Math.floor(a)+(m?':'+p2(m):'');};
 const fmtJD=jd=>fmtT(jdToUTC(jd));
@@ -158,11 +178,16 @@ const coName=i=>ST.lang==='en'?COUNTRIES[i][1]:COUNTRIES[i][0];
 /* ---------- 版面尺寸 ---------- */
 let layoutBusy=false;
 const isLand=()=>matchMedia('(min-aspect-ratio:11/10)').matches;
+let MOONW=0,SKYH=80;
 function fitLayout(){
   if(layoutBusy)return; layoutBusy=true;
   const gp=$('gpane').getBoundingClientRect(), land=isLand();
-  const dh=land?Math.round(clamp(gp.height*0.46,150,300))
-               :Math.round(clamp($('main').clientHeight*0.62,220,560));
+  /* 抽屉高度：以「天空」面板的實際高度為準
+     = 內邊距 18 + 兩列標題 16+24 + 兩張天空圖 2×sh */
+  const dw=land?gp.width:Math.max(220,$('main').clientWidth-16);
+  const sh=Math.round(clamp((dw-24)*0.24,58,92)); SKYH=sh;   /* sizeAll 直接沿用，兩邊不會算不一樣 */
+  const cap=(land?gp.height:$('main').clientHeight)*0.72;
+  const dh=Math.round(clamp(2*sh+60,150,cap));          /* 內邊距 18 + 標題 16+24 + 邊框 2 */
   root.style.setProperty('--drawerh',dh+'px');
   ST.view.padBottom=32+(ST.tab&&land?Math.round(dh*0.8):0);
   const uA=$('unitA'),uB=$('unitB');
@@ -174,10 +199,10 @@ function fitLayout(){
     const avail=$('side').clientHeight-chA-chB-16;
     w=Math.min(innerW,380,Math.max(142,avail/2));
   }else{
-    const avail=$('main').clientHeight*0.62-Math.max(chA,chB)-10;
+    const avail=$('main').clientHeight*0.55-Math.max(chA,chB)-10;
     w=Math.min(innerW,380,Math.max(132,avail));
   }
-  w=Math.round(w);
+  w=Math.round(w); MOONW=w;
   const cur=parseFloat(getComputedStyle(root).getPropertyValue('--moonw'))||0;
   if(Math.abs(cur-w)>1) root.style.setProperty('--moonw',w+'px');
   layoutBusy=false;
@@ -198,7 +223,7 @@ function sizeAll(){
     const p=document.querySelector('.dpanel[data-p="sky"]');
     const w=p.clientWidth-22;
     if(w>10){ for(const id of ['skyA','skyB']){ const c=$(id);
-      c.style.height=Math.round(clamp(w*0.24,58,92))+'px'; c.style.width='100%'; fit(c,760); } }
+      c.style.height=SKYH+'px'; c.style.width='100%'; fit(c,760); } }
   }
   if(ST.tab==='geo'){
     const wrap=$('geoWrap'), g=$('geo');
@@ -227,7 +252,7 @@ const dropAvoid=()=>{AVOID=null;};
 function overlayAvoid(){
   if(AVOID)return AVOID;
   const cv=$('globe'), r=cv.getBoundingClientRect(), s=cv.width/(r.width||1), out=[];
-  for(const sel of ['.gov.tl','.gov.tr','#legend','#tabbar']){
+  for(const sel of ['.gov.tl','.gov.tr','#tabbar']){
     const e=document.querySelector(sel); if(!e)continue;
     const b=e.getBoundingClientRect(); if(!b.width||!b.height)continue;
     out.push({x:(b.left-r.left)*s,y:(b.top-r.top)*s,w:b.width*s,h:b.height*s});
@@ -263,7 +288,7 @@ function updateText(){
         : fmtT(v)+'  '+fmtOff(off));
     }
     set('s'+t+'alt',ob.alt.toFixed(1)+'°');
-    set('s'+t+'az',ob.az.toFixed(0)+'° '+dirName(ob.az));
+    set('s'+t+'az',ob.az.toFixed(0)+'°'+(MOONW&&MOONW<200?'':' '+dirName(ob.az)));
     set('s'+t+'il',(ob.k*100).toFixed(1)+'%');
     set('s'+t+'age',sc.age.toFixed(1)+'d');
     const b=$('badge'+t);
@@ -271,21 +296,33 @@ function updateText(){
     else if(ob.sunAlt>-0.5){b.hidden=false;b.className='mbadge';b.textContent=T.daylit;}
     else b.hidden=true;
   }
-  $('gInfo').textContent='UTC '+fmtJD(scene.jdUT)+'  ·  '+(GE.stat||'…');
+  $('gInfo').textContent=fmtT(ST.A)+' '+fmtOff(offFromLocal(ST.A))+'  ·  '+(GE.stat||'…');
   const now=performance.now();
   if(ST.tab==='tbl'&&(!ST.play||now-tblT>300)){tblT=now;buildTable();}
 }
+/* 下一次黃經距角 = target（0＝朔、1 80＝望），以平均角速做不動點迭代 */
+const RATE=360/29.530588853;
+function nextPhase(jd0,target){
+  const f=j=>n360(buildScene(j).elongEcl-target);
+  let j=jd0+(360-f(jd0))/RATE;
+  for(let i=0;i<8;i++) j-=n180(f(j))/RATE;
+  return j;
+}
+const durTxt=d=>{const h=Math.round(d*24),dd=Math.floor(h/24),hh=h%24;
+  return (dd?dd+'d ':'')+hh+'h';};
 function buildTable(){
   if(!scene)return;
   const R=T.rows;
   if(!rsCache&&!ST.play){
-    const mk=(v,jd)=>{const off=offAtJD(v,jd),u=jdToUTC(jd+off/24);
-      return {off,rs:riseSet(v.lat,v.lon,jdFromUTC(u.y,u.mo,u.d,0,0,0)-off/24,'moon')};};
+    const mk=(v,jd)=>{const off=offAtJD(v,jd),u=jdToUTC(jd+off/24),
+      j0=jdFromUTC(u.y,u.mo,u.d,0,0,0)-off/24;
+      return {off,rs:riseSet(v.lat,v.lon,j0,'moon'),srs:riseSet(v.lat,v.lon,j0,'sun')};};
     rsCache={A:mk(ST.A,jdOf(ST.A)),B:mk(ST.B,ST.syncB?jdOf(ST.A):jdOf(ST.B))};
+    rsCache.nw=nextPhase(scene.jdUT,0); rsCache.fl=nextPhase(scene.jdUT,180);
   }
-  const rsTxt=c=>{
+  const rsTxt=(c,key)=>{
     if(!c)return '…';
-    const r=c.rs,off=c.off;
+    const r=c[key||'rs'],off=c.off;
     if(r.alwaysUp)return T.up; if(r.alwaysDown)return T.down;
     const f=j=>j===null?'—':hm(j+off/24);
     return f(r.rise)+' / '+f(r.transit)+' / '+f(r.set);
@@ -316,10 +353,25 @@ function buildTable(){
              Math.round(obB.dist).toLocaleString()+' km<br><span style="color:var(--dim2)">'+obB.angDiam.toFixed(2)+"′</span>");
   row(R.rs,rsTxt(rsCache&&rsCache.A),rsTxt(rsCache&&rsCache.B));
   grp(R.sky);
+  row(R.srs,rsTxt(rsCache&&rsCache.A,'srs'),rsTxt(rsCache&&rsCache.B,'srs'));
   row(R.salt,obA.sunAlt.toFixed(2)+'°',obB.sunAlt.toFixed(2)+'°');
   row(R.saz,obA.sunAz.toFixed(1)+'° '+dirName(obA.sunAz),obB.sunAz.toFixed(1)+'° '+dirName(obB.sunAz));
   row(R.state,T.skies[skyIdx(obA.sunAlt)],T.skies[skyIdx(obB.sunAlt)]);
   row(R.vis,obA.alt>0?T.visOK:T.visNo,obB.alt>0?T.visOK:T.visNo);
+  const one=(l,v)=>rows.push('<tr><th>'+l+'</th><td class="d" colspan="2">'+v+'</td></tr>');
+  const sg=x=>(x>=0?'+':'−')+Math.abs(x).toFixed(2);
+  grp(R.diff);
+  one(R.dpole,sg(n180(obA.poleAng-obB.poleAng))+'°');
+  one(R.dlimb,sg(n180(obA.limbAng-obB.limbAng))+'°');
+  one(R.dalt,sg(obA.alt-obB.alt)+'°');
+  one(R.dill,sg((obA.k-obB.k)*100)+'%');
+  grp(R.sched);
+  if(rsCache){
+    const pTxt=jd=>fmtJD(jd+offAtJD(ST.A,jd)/24)+'<br><span style="color:var(--dim2)">'
+      +durTxt(jd-scene.jdUT)+' '+R.tonext+'</span>';
+    one(R.nnew,pTxt(rsCache.nw));
+    one(R.nfull,pTxt(rsCache.fl));
+  }else{ one(R.nnew,'…'); one(R.nfull,'…'); }
   $('cmpTbl').innerHTML=rows.join('');
 }
 
@@ -357,7 +409,7 @@ function fillOffsets(){
   for(const t of ['A','B']){
     const s=$('off'+t); s.innerHTML='';
     opt(s,'auto',T.auto);
-    OFFS.forEach(v=>opt(s,v,fmtOff(v)));
+    OFFS.forEach(v=>opt(s,v,fmtOffSel(v)));
   }
 }
 function syncForm(){
@@ -425,12 +477,11 @@ function bindForm(){
     const t=b.dataset.unit||'A';
     setFromJD(ST[t],jdOf(ST[t])+(+b.dataset.step)/86400);
     if(t==='A')applySync(); syncForm(); refresh();}));
-  $('tgtA').addEventListener('click',()=>setTarget('A'));
-  $('tgtB').addEventListener('click',()=>setTarget('B'));
+  for(const t of ['A','B']) $('mtg'+t).addEventListener('click',()=>{setStats(!ST.stats);queueHash();});
+  $('tgtA').addEventListener('click',()=>goTarget('A'));
+  $('tgtB').addEventListener('click',()=>goTarget('B'));
   $('gZin').addEventListener('click',()=>{ST.view.zoom=clamp(ST.view.zoom*1.4,0.55,8);drawGlobeOnly();});
   $('gZout').addEventListener('click',()=>{ST.view.zoom=clamp(ST.view.zoom/1.4,0.55,8);drawGlobeOnly();});
-  $('gToA').addEventListener('click',()=>{ST.view.lat=ST.A.lat;ST.view.lon=ST.A.lon;drawGlobeOnly();});
-  $('gToB').addEventListener('click',()=>{ST.view.lat=ST.B.lat;ST.view.lon=ST.B.lon;drawGlobeOnly();});
   $('gSpin').addEventListener('click',()=>{ST.view.spin=!ST.view.spin;
     $('gSpin').classList.toggle('on',ST.view.spin);
     if(ST.view.spin)startLoop();
@@ -443,6 +494,7 @@ function bindForm(){
   document.querySelectorAll('#tabbar .tb').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.p)));
 }
 function setTarget(t){ST.target=t;$('tgtA').classList.toggle('on',t==='A');$('tgtB').classList.toggle('on',t==='B');}
+function goTarget(t){setTarget(t);ST.view.lat=ST[t].lat;ST.view.lon=ST[t].lon;drawGlobeOnly();}
 function setTab(p){
   ST.tab=(ST.tab===p)?null:p;
   document.querySelectorAll('#tabbar .tb').forEach(b=>b.classList.toggle('on',b.dataset.p===ST.tab));
@@ -556,6 +608,14 @@ function moonSetup(t){
 }
 /* ---------- 動畫 ---------- */
 let raf=null,lastT=0;
+function setStats(v){
+  ST.stats=v;
+  for(const t of ['A','B']){
+    const s=$('st'+t), b=$('mtg'+t);
+    if(s)s.hidden=!v;
+    if(b)b.classList.toggle('on',v);
+  }
+}
 function setPlay(t,v){
   const k=(t==='A'?'play':'playB'), b=$('tPlay'+(t==='A'?'':'B'));
   ST[k]=v;
@@ -603,7 +663,7 @@ function writeHash(){
   const p=new URLSearchParams();
   p.set('a',enc(ST.A)); p.set('ta',tm(ST.A));
   p.set('b',enc(ST.B)); p.set('tb',tm(ST.B));
-  p.set('sy',ST.syncB?'1':'0'); p.set('lg',ST.lang);
+  p.set('sy',ST.syncB?'1':'0'); p.set('st',ST.stats?'1':'0'); p.set('lg',ST.lang);
   try{history.replaceState(null,'','#'+p.toString());}catch(e){}
 }
 function readHash(){
@@ -622,6 +682,7 @@ function readHash(){
     if(!dec(ST.A,'a','ta'))return false;
     dec(ST.B,'b','tb');
     ST.syncB=p.get('sy')!=='0';
+    if(p.get('st')!==null) ST.stats=p.get('st')!=='0';
     if(p.get('lg')==='en')ST.lang='en';
     return true;
   }catch(e){return false;}
@@ -646,7 +707,7 @@ function setLang(l){
   document.querySelectorAll('[data-t]').forEach(e=>{const k=e.dataset.t;if(T[k]!==undefined)e.textContent=T[k];});
   $('btnLang').textContent=(l==='zh'?'EN':'中文');
   $('notes').innerHTML=T.notesHtml;
-  fillCountries(); fillOffsets(); syncForm(); fitLayout(); sizeAll(); refresh();
+  fillCountries(); fillOffsets(); syncForm(); setStats(ST.stats); fitLayout(); sizeAll(); refresh();
 }
 /* ---------- 自我驗算（?test） ---------- */
 function mvTest(){

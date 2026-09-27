@@ -482,12 +482,12 @@ function drawGlobeOverlay(ctx,P,scene,marks,view,quality,lang){
   }
   const reserved=(view.avoid||[]).slice();
   const pS=proj(scene.subSolar.lat,scene.subSolar.lon), pM=proj(scene.subLunar.lat,scene.subLunar.lon);
-  if(pS.z>0)reserved.push({x:pS.x-9*S,y:pS.y-9*S,w:18*S,h:18*S});
-  if(pM.z>0)reserved.push({x:pM.x-9*S,y:pM.y-9*S,w:18*S,h:18*S});
+  if(pS.z>0)reserved.push({x:pS.x-9*S,y:pS.y-9*S,w:76*S,h:18*S});
+  if(pM.z>0)reserved.push({x:pM.x-9*S,y:pM.y-9*S,w:76*S,h:18*S});
   for(const m of marks){const q=proj(m.lat,m.lon);
     if(q.z>0)reserved.push({x:q.x-11*S,y:q.y-11*S,w:56*S,h:22*S});}
   drawCityLabels(ctx,P,view,lang,quality==='low'?0:undefined,reserved,view.sel||[]);
-  const spot=(p,col,glyph)=>{
+  const spot=(p,col,glyph,label)=>{
     if(p.z<=0)return;
     ctx.save();
     ctx.beginPath(); ctx.arc(p.x,p.y,7.5*S,0,6.2832);
@@ -495,9 +495,15 @@ function drawGlobeOverlay(ctx,P,scene,marks,view,quality,lang){
     ctx.strokeStyle=col; ctx.lineWidth=1.3*S; ctx.stroke();
     ctx.fillStyle=col; ctx.font=fnt('400',9.5*S);
     ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(glyph,p.x,p.y+.5*S);
+    ctx.font=fnt('600',10*S); ctx.textAlign='left';
+    const tx=p.x+12*S, ty=p.y-0.5*S, wd=ctx.measureText(label).width;
+    ctx.fillStyle='rgba(5,8,16,.78)';
+    ctx.beginPath(); ctx.roundRect(tx-4*S,ty-8*S,wd+8*S,16*S,5*S); ctx.fill();
+    ctx.fillStyle=col; ctx.fillText(label,tx,ty);
     ctx.restore();
   };
-  spot(pS,'#ffd75e','☀'); spot(pM,'#dfe6f5','☾');
+  spot(pS,'#ffd75e','☀',lang==='en'?'Subsolar':'日下點');
+  spot(pM,'#dfe6f5','☾',lang==='en'?'Sublunar':'月下點');
   for(const m of marks){
     const p=proj(m.lat,m.lon); if(p.z<=0)continue;
     ctx.save();
@@ -831,11 +837,19 @@ function renderGeo(cv,scene,obs,lang){
   ctx.restore();
   ctx.font=fnt('400',10*S); ctx.textAlign='right'; ctx.textBaseline='top';
   ctx.fillStyle='rgba(184,200,228,.88)';
-  const L1=lang==='en'?'elongation':'日月距角',L2=lang==='en'?'phase angle':'相位角',
-        L3=lang==='en'?'illuminated':'照明率';
+  const en=lang==='en';
+  const L1=en?'elongation':'日月距角',L2=en?'phase angle':'相位角',
+        L3=en?'illuminated':'照明率',L4=en?'distance':'地心距',L5=en?'age':'月齡',
+        L6=en?'ang. diameter':'視直徑';
+  const adm=Math.atan2(1737.4*2,scene.moon.r)*R2D*60;
   ctx.fillText(L1+'  '+scene.elongEcl.toFixed(1)+'°',W-8*S,7*S);
   ctx.fillText(L2+'  '+scene.phase.toFixed(1)+'°',W-8*S,21*S);
   ctx.fillText(L3+'  '+(scene.k*100).toFixed(1)+'%',W-8*S,35*S);
-  ctx.textAlign='left'; ctx.textBaseline='bottom'; ctx.fillStyle='rgba(122,138,166,.85)';
+  if(H>150*S){
+    ctx.fillText(L5+'  '+scene.age.toFixed(1)+' d',W-8*S,49*S);
+    ctx.fillText(L4+'  '+Math.round(scene.moon.r).toLocaleString()+' km',W-8*S,63*S);
+    ctx.fillText(L6+'  '+adm.toFixed(2)+'′',W-8*S,77*S);
+  }
+  ctx.textAlign='left'; ctx.textBaseline='bottom'; ctx.fillStyle='rgba(150,166,196,.9)';
   ctx.fillText(lang==='en'?'not to scale':'非等比例',9*S,H-6*S);
 }
